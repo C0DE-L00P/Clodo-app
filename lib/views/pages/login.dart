@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../model/User.dart';
+import '../../model/User.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -17,6 +19,10 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController? _emailController;
   TextEditingController? _passwordController;
   GlobalKey<FormState>? _key;
+  bool _isLoading = false;
+  int _stepsDone = 0;
+  bool _passwordHidden = true;
+  var timer;
 
   // var isFirstHover = false,isSecondHover = false;
 
@@ -39,6 +45,60 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.person,
+                      size: 80, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Text(
+                    '.',
+                    style: TextStyle(
+                        color: _stepsDone > 0
+                            ? Theme.of(context).colorScheme.primary
+                            : const Color.fromARGB(255, 192, 191, 191),
+                        fontSize: 60),
+                  ),
+                  Text(
+                    '.',
+                    style: TextStyle(
+                        color: _stepsDone > 1
+                            ? Theme.of(context).colorScheme.primary
+                            : const Color.fromARGB(255, 192, 191, 191),
+                        fontSize: 60),
+                  ),
+                  Text(
+                    '.',
+                    style: TextStyle(
+                        color: _stepsDone > 2
+                            ? Theme.of(context).colorScheme.primary
+                            : const Color.fromARGB(255, 192, 191, 191),
+                        fontSize: 60),
+                  ),
+                  Text(
+                    '.',
+                    style: TextStyle(
+                        color: _stepsDone > 3
+                            ? Theme.of(context).colorScheme.primary
+                            : const Color.fromARGB(255, 192, 191, 191),
+                        fontSize: 60),
+                  ),
+                  const SizedBox(
+                    width: 16,
+                  ),
+                  const Icon(
+                    Icons.cloud,
+                    size: 80,
+                    color: Color.fromARGB(255, 192, 191, 191),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 24,
+              ),
+
               TextFormField(
                 controller: _emailController,
                 validator: (value) =>
@@ -68,7 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                 validator: (value) =>
                     value!.isEmpty ? "This field is required" : null,
                 keyboardType: TextInputType.text,
-                obscureText: true,
+                obscureText: _passwordHidden,
                 enableSuggestions: false,
                 autocorrect: false,
                 decoration: InputDecoration(
@@ -82,13 +142,26 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   labelText: 'Password',
                   icon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      // Based on passwordVisible state choose the icon
+                      _passwordHidden ? Icons.visibility_off : Icons.visibility,
+                      color: Theme.of(context).primaryColorDark,
+                    ),
+                    onPressed: () {
+                      // Update the state i.e. toogle the state of passwordVisible variable
+                      setState(() {
+                        _passwordHidden = !_passwordHidden;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(
                 height: 32,
               ),
               ElevatedButton(
-                onPressed: login,
+                onPressed: _isLoading ? null : login,
                 child: const Text('L O G I N'),
               ),
               const SizedBox(
@@ -133,25 +206,27 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 120,),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(primary: Colors.blueGrey),
-                onPressed: () {
-                  //Navigate back to splashy
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/', (route) => false);
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.settings_backup_restore_sharp),
-                    Text(
-                      'Back to Splashy',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
+              const SizedBox(
+                height: 120,
               ),
+              // ElevatedButton(
+              //   style: ElevatedButton.styleFrom(primary: Colors.blueGrey),
+              //   onPressed: () {
+              //     //Navigate back to splashy
+              //     Navigator.pushNamedAndRemoveUntil(
+              //         context, '/', (route) => false);
+              //   },
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: const [
+              //       Icon(Icons.settings_backup_restore_sharp),
+              //       Text(
+              //         'Back to Splashy',
+              //         style: TextStyle(color: Colors.white),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -163,6 +238,10 @@ class _LoginPageState extends State<LoginPage> {
     //TODO: how to use a RegExp pattern in FLutter
     //TODO: how to make password hiddable text
     //Check if all are valid
+    setState(() {
+      _isLoading = true;
+    });
+
     if (_key!.currentState!.validate()) {
       //all inputs are filled correctly
 
@@ -170,21 +249,48 @@ class _LoginPageState extends State<LoginPage> {
       var password = _passwordController!.value.text;
       User user = User(email: email, password: password);
 
-      //TODO: It should check for the user credentials but skip for now
+      //Dots Colored Animations
+      timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+        print(timer.tick);
 
-      SharedPreferences? prefs;
-      //Save in sharedPrefs
-      SharedPreferences.getInstance().then((value) {
-        print('Just for debugging');
+        if (_stepsDone < 4) {
+          setState(() {
+            _stepsDone++;
+          });
+        } else {
+          timer.cancel();
+          //TODO: It should check for the user credentials but skip for now
 
-        prefs = value;
-        prefs!.setString('USER', user.toJson().toString());
-        prefs!.setBool('IS_LOGGED_IN', true);
+          SharedPreferences? prefs;
+          //Save in sharedPrefs
+          SharedPreferences.getInstance().then((value) {
+            prefs = value;
+            prefs!.setString('USER', user.toJson().toString());
+            prefs!.setBool('IS_LOGGED_IN', true);
 
-        Navigator.pushNamedAndRemoveUntil(
-                        context, '/home', (route) => false);
-        // Navigator.pushNamed(context, '/home', arguments: user);
+            setState() {
+              _isLoading = false;
+            }
+
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/home',
+                (route) => false,
+                arguments: user
+                );
+
+            // Navigator.pushNamed(context, '/home', arguments: user);
+          });
+        }
       });
+    } else {
+      const snackBar = SnackBar(
+        content: Text('Something went wrong'),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+      setState() {
+        _isLoading = false;
+      }
     }
   }
 }
