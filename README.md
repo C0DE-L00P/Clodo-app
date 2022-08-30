@@ -1,16 +1,10 @@
 # Clodo
 
-A new Flutter project.
 
-## Getting Started
+https://user-images.githubusercontent.com/43136060/187462407-3b69e78e-1888-4fd8-a250-1c8c7264d6e5.mp4
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+to run the project:  
+1- clone  
+2- get packages  
+3- flutter run (make sure you install flutter sdk for this step)  
